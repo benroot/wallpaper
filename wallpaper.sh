@@ -160,8 +160,16 @@ get_line() {
 # Apply ImageMagick filename overlay and write to OVERLAY_FILE
 apply_overlay() {
     local src="$1"
-    local label
-    label=$(basename "$src")
+    local label dir parent
+
+    # Include parent dir in label unless image sits directly in IMAGE_ROOT
+    dir=$(dirname "$src")
+    if [[ "$(realpath "$dir" 2>/dev/null || echo "$dir")" == "$(realpath "$IMAGE_ROOT" 2>/dev/null || echo "$IMAGE_ROOT")" ]]; then
+        label=$(basename "$src")
+    else
+        parent=$(basename "$dir")
+        label="$parent/$(basename "$src")"
+    fi
 
     if ! command -v convert &>/dev/null; then
         warn "ImageMagick 'convert' not found — skipping overlay. Set USE_IMAGEMAGICK=false to suppress this warning."
@@ -169,10 +177,16 @@ apply_overlay() {
         return
     fi
 
+    # Scale font size to ~2% of image width so it looks consistent across resolutions
+    local width fontsize
+    width=$(identify -format "%w" "$src" 2>/dev/null) || width=1920
+    fontsize=$(( width * OVERLAY_FONTSIZE / 1000 ))
+    [[ $fontsize -lt 10 ]] && fontsize=10
+
     convert "$src" \
         -gravity "$OVERLAY_GRAVITY" \
         -font "$OVERLAY_FONT" \
-        -pointsize "$OVERLAY_FONTSIZE" \
+        -pointsize "$fontsize" \
         \( -clone 0 -fill "$OVERLAY_SHADOW_COLOR" \
            -annotate "+$((OVERLAY_MARGIN+2))+$((OVERLAY_MARGIN-2))" "$label" \) \
         -composite \
