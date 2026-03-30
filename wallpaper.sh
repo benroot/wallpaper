@@ -377,7 +377,20 @@ case "$CMD" in
         ;;
 
     help|--help|-h)
-        grep '^#' "$0" | grep -v '^#!/' | sed 's/^# \{0,1\}//'
+        local mode current
+        mode=$(get_mode)
+        current=$(get_current)
+        echo "Current: $current"
+        echo "Mode:    $( [[ "$mode" == "favs" ]] && echo "favorites" || echo "full rotation" )"
+        echo ""
+        echo "Usage:"
+        echo "  wallpaper.sh next              Advance to next wallpaper"
+        echo "  wallpaper.sh prev              Go to previous wallpaper"
+        echo "  wallpaper.sh fav               Mark current as favorite"
+        echo "  wallpaper.sh unfav             Remove current from favorites"
+        echo "  wallpaper.sh favmode on|off    Switch to/from favorites-only rotation"
+        echo "  wallpaper.sh rebuild           Reshuffle and rebuild the image list"
+        echo "  wallpaper.sh status            Show full status"
         ;;
 
     *)
