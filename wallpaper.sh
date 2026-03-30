@@ -39,11 +39,11 @@ OVERLAY_FILE="/tmp/wallpaper_current.jpg"
 # OS command to set the desktop wallpaper.
 # Use %FILE% as the placeholder for the image path.
 # Examples:
-#   feh:         feh --bg-scale %FILE%
+#   feh:         feh --bg-max %FILE%
 #   swaybg:      swaybg -i %FILE% -m fill &
 #   xfconf:      xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/image-path -s %FILE%
 #   macOS:       osascript -e 'tell application "Finder" to set desktop picture to POSIX file "%FILE%"'
-SET_WALLPAPER_CMD="feh --bg-scale %FILE%"
+SET_WALLPAPER_CMD="feh --bg-max %FILE%"
 
 # ImageMagick overlay options
 OVERLAY_FONT="DejaVu-Sans-Bold"
