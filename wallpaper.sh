@@ -47,7 +47,7 @@ SET_WALLPAPER_CMD="feh --bg-scale %FILE%"
 
 # ImageMagick overlay options
 OVERLAY_FONT="DejaVu-Sans-Bold"
-OVERLAY_FONTSIZE=28
+OVERLAY_FONTSIZE=20    # Character height scale: pointsize = image_width * OVERLAY_FONTSIZE / 1000
 OVERLAY_COLOR="white"
 OVERLAY_SHADOW_COLOR="black"
 OVERLAY_GRAVITY="SouthEast"   # Corner: NorthWest, NorthEast, SouthWest, SouthEast
@@ -177,7 +177,7 @@ apply_overlay() {
         return
     fi
 
-    # Scale font size to ~2% of image width so it looks consistent across resolutions
+    # Pointsize (character height) scales with image width for consistent appearance across resolutions
     local width fontsize
     width=$(identify -format "%w" "$src" 2>/dev/null) || width=1920
     fontsize=$(( width * OVERLAY_FONTSIZE / 1000 ))
