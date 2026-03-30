@@ -50,7 +50,7 @@ OVERLAY_FONT="DejaVu-Sans-Bold"
 OVERLAY_FONTSIZE=20    # Character height scale: pointsize = image_width * OVERLAY_FONTSIZE / 1000
 OVERLAY_COLOR="white"
 OVERLAY_SHADOW_COLOR="black"
-OVERLAY_GRAVITY="SouthEast"   # Corner: NorthWest, NorthEast, SouthWest, SouthEast
+OVERLAY_OPACITY=0.80          # Text opacity (0.0–1.0)
 OVERLAY_MARGIN=20
 
 # -----------------------------------------------------------------------------
@@ -178,20 +178,25 @@ apply_overlay() {
     fi
 
     # Pointsize (character height) scales with image width for consistent appearance across resolutions
-    local width fontsize
+    local width fontsize gravity
     width=$(identify -format "%w" "$src" 2>/dev/null) || width=1920
     fontsize=$(( width * OVERLAY_FONTSIZE / 1000 ))
     [[ $fontsize -lt 10 ]] && fontsize=10
 
+    # Pick a random corner each time
+    local corners=("NorthWest" "NorthEast" "SouthWest" "SouthEast")
+    gravity="${corners[$((RANDOM % 4))]}"
+
+    # Draw text on a transparent layer then composite at OVERLAY_OPACITY
     convert "$src" \
-        -gravity "$OVERLAY_GRAVITY" \
-        -font "$OVERLAY_FONT" \
-        -pointsize "$fontsize" \
-        \( -clone 0 -fill "$OVERLAY_SHADOW_COLOR" \
-           -annotate "+$((OVERLAY_MARGIN+2))+$((OVERLAY_MARGIN-2))" "$label" \) \
+        \( -clone 0 -alpha transparent \
+           -font "$OVERLAY_FONT" -pointsize "$fontsize" -gravity "$gravity" \
+           -fill "$OVERLAY_SHADOW_COLOR" \
+           -annotate "+$((OVERLAY_MARGIN+2))+$((OVERLAY_MARGIN-2))" "$label" \
+           -fill "$OVERLAY_COLOR" \
+           -annotate "+${OVERLAY_MARGIN}+${OVERLAY_MARGIN}" "$label" \
+           -channel Alpha -evaluate multiply "$OVERLAY_OPACITY" \) \
         -composite \
-        -fill "$OVERLAY_COLOR" \
-        -annotate "+${OVERLAY_MARGIN}+${OVERLAY_MARGIN}" "$label" \
         "$OVERLAY_FILE" 2>/dev/null \
     || { warn "ImageMagick overlay failed — using original file."; cp "$src" "$OVERLAY_FILE"; }
 }
