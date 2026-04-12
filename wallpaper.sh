@@ -50,7 +50,7 @@ OVERLAY_FONT="DejaVu-Sans-Bold"
 OVERLAY_FONTSIZE=20    # Character height scale: pointsize = image_width * OVERLAY_FONTSIZE / 1000
 OVERLAY_COLOR="white"
 OVERLAY_SHADOW_COLOR="black"
-OVERLAY_OPACITY=0.80          # Text opacity (0.0–1.0)
+OVERLAY_OPACITY=0.50          # Text opacity (0.0–1.0)
 OVERLAY_MARGIN=20
 
 # -----------------------------------------------------------------------------
@@ -335,6 +335,16 @@ case "$CMD" in
                 echo "main" > "$MODE_FILE"
                 info "Switched to main rotation mode."
                 ;;
+            "")
+                if [[ "$(get_mode)" == "favs" ]]; then
+                    echo "main" > "$MODE_FILE"
+                    info "Switched to main rotation mode."
+                else
+                    rebuild_favs_list
+                    echo "favs" > "$MODE_FILE"
+                    info "Switched to favorites-only mode."
+                fi
+                ;;
             *)
                 die "Usage: wallpaper.sh favmode [on|off]"
                 ;;
@@ -367,6 +377,18 @@ case "$CMD" in
         fi
         ;;
 
+    delete)
+        current=$(get_current)
+        [[ "$current" != "(none)" ]] || die "No current wallpaper is set yet."
+        [[ -f "$current" ]] || die "File not found: $current"
+        rm "$current"
+        info "Deleted: $current"
+        # Remove from list and favorites if present
+        grep -vxF "$current" "$LIST_FILE" > "$LIST_FILE.tmp" && mv "$LIST_FILE.tmp" "$LIST_FILE" 2>/dev/null || true
+        grep -vxF "$current" "$FAVS_FILE" > "$FAVS_FILE.tmp" && mv "$FAVS_FILE.tmp" "$FAVS_FILE" 2>/dev/null || true
+        do_next
+        ;;
+
     rebuild)
         rebuild_list
         ;;
@@ -382,7 +404,6 @@ case "$CMD" in
         ;;
 
     help|--help|-h)
-        local mode current
         mode=$(get_mode)
         current=$(get_current)
         echo "Current: $current"
@@ -394,6 +415,7 @@ case "$CMD" in
         echo "  wallpaper.sh fav               Mark current as favorite"
         echo "  wallpaper.sh unfav             Remove current from favorites"
         echo "  wallpaper.sh favmode on|off    Switch to/from favorites-only rotation"
+        echo "  wallpaper.sh delete            Delete current wallpaper file and advance to next"
         echo "  wallpaper.sh rebuild           Reshuffle and rebuild the image list"
         echo "  wallpaper.sh status            Show full status"
         ;;
