@@ -72,6 +72,7 @@ FAVS_POINTER_FILE="$STATE_DIR/favs_pointer.txt"
 die()      { echo "ERROR: $*" >&2; exit 1; }
 info()     { echo "[wallpaper] $*"; }
 warn()     { echo "[wallpaper] WARNING: $*" >&2; }
+notify()   { command -v zenity &>/dev/null && zenity --notification --text="$*" 2>/dev/null || true; }
 
 require_cmd() {
     command -v "$1" &>/dev/null || die "'$1' is required but not found in PATH."
@@ -258,12 +259,14 @@ display_at_index() {
 favmode_on() {
     echo "favs" > "$MODE_FILE"
     info "Switched to favorites-only mode."
+    notify "Wallpaper: favorites mode"
     do_redisplay
 }
 
 favmode_off() {
     echo "main" > "$MODE_FILE"
     info "Switched to main rotation mode."
+    notify "Wallpaper: main rotation mode"
     do_redisplay
 }
 
@@ -334,6 +337,7 @@ case "$CMD" in
             echo "$current" >> "$FAVS_FILE"
             [[ -f "$FAVS_LIST_FILE" ]] && echo "$current" >> "$FAVS_LIST_FILE"
             info "Added to favorites: $current"
+            notify "Favorited: $(basename "$current")"
         fi
         ;;
 
@@ -344,6 +348,7 @@ case "$CMD" in
             grep -vxF "$current" "$FAVS_FILE" > "$FAVS_FILE.tmp" && mv "$FAVS_FILE.tmp" "$FAVS_FILE"
             grep -vxF "$current" "$FAVS_LIST_FILE" > "$FAVS_LIST_FILE.tmp" && mv "$FAVS_LIST_FILE.tmp" "$FAVS_LIST_FILE" 2>/dev/null || true
             info "Removed from favorites: $current"
+            notify "Unfavorited: $(basename "$current")"
             [[ "$(get_mode)" == "favs" ]] && do_next
         else
             info "Not in favorites: $current"
