@@ -317,7 +317,9 @@ case "$CMD" in
         [[ "$current" != "(none)" ]] || die "No current wallpaper is set yet."
         if grep -qxF "$current" "$FAVS_FILE" 2>/dev/null; then
             grep -vxF "$current" "$FAVS_FILE" > "$FAVS_FILE.tmp" && mv "$FAVS_FILE.tmp" "$FAVS_FILE"
+            grep -vxF "$current" "$FAVS_LIST_FILE" > "$FAVS_LIST_FILE.tmp" && mv "$FAVS_LIST_FILE.tmp" "$FAVS_LIST_FILE" 2>/dev/null || true
             info "Removed from favorites: $current"
+            [[ "$(get_mode)" == "favs" ]] && do_next
         else
             info "Not in favorites: $current"
         fi
