@@ -113,7 +113,7 @@ build_find_args() {
 }
 
 # Rebuild (or build) the main shuffled list
-rebuild_list() {
+rebuild_main_list() {
     info "Scanning $IMAGE_ROOT for images..."
     [[ -d "$IMAGE_ROOT" ]] || die "IMAGE_ROOT '$IMAGE_ROOT' does not exist."
 
@@ -226,7 +226,7 @@ resolve_list() {
         POINTER_ACTIVE="$POINTER_FILE"
         if [[ ! -s "$LIST_ACTIVE" ]]; then
             info "No image list found. Building one now..."
-            rebuild_list
+            rebuild_main_list
         fi
     fi
 }
@@ -256,9 +256,9 @@ display_at_index() {
 }
 
 favmode_on() {
-    rebuild_favs_list
     echo "favs" > "$MODE_FILE"
     info "Switched to favorites-only mode."
+    do_redisplay
 }
 
 favmode_off() {
@@ -332,6 +332,7 @@ case "$CMD" in
             info "Already a favorite: $current"
         else
             echo "$current" >> "$FAVS_FILE"
+            [[ -f "$FAVS_LIST_FILE" ]] && echo "$current" >> "$FAVS_LIST_FILE"
             info "Added to favorites: $current"
         fi
         ;;
@@ -398,7 +399,8 @@ case "$CMD" in
         ;;
 
     rebuild)
-        rebuild_list
+        [[ "$(get_mode)" == "favs" ]] && rebuild_favs_list || rebuild_main_list
+        do_next
         ;;
 
     list)
