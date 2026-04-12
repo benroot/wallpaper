@@ -255,6 +255,30 @@ display_at_index() {
     set_wallpaper_os "$display_file"
 }
 
+favmode_on() {
+    rebuild_favs_list
+    echo "favs" > "$MODE_FILE"
+    info "Switched to favorites-only mode."
+}
+
+favmode_off() {
+    echo "main" > "$MODE_FILE"
+    info "Switched to main rotation mode."
+    do_redisplay
+}
+
+# Redisplay the last shown image without moving the pointer
+do_redisplay() {
+    resolve_list
+    local total idx show_idx
+    total=$(wc -l < "$LIST_ACTIVE")
+    [[ $total -gt 0 ]] || die "Image list is empty."
+
+    idx=$(cat "$POINTER_ACTIVE" 2>/dev/null || echo "0")
+    show_idx=$(( (idx - 1 + total) % total ))
+    display_at_index "$LIST_ACTIVE" "$POINTER_ACTIVE" "$show_idx" "$idx"
+}
+
 # Core: advance to next image in whichever list is active
 do_next() {
     resolve_list
@@ -328,28 +352,10 @@ case "$CMD" in
     favmode)
         SUBARG="${2:-}"
         case "$SUBARG" in
-            on)
-                rebuild_favs_list
-                echo "favs" > "$MODE_FILE"
-                info "Switched to favorites-only mode."
-                ;;
-            off)
-                echo "main" > "$MODE_FILE"
-                info "Switched to main rotation mode."
-                ;;
-            "")
-                if [[ "$(get_mode)" == "favs" ]]; then
-                    echo "main" > "$MODE_FILE"
-                    info "Switched to main rotation mode."
-                else
-                    rebuild_favs_list
-                    echo "favs" > "$MODE_FILE"
-                    info "Switched to favorites-only mode."
-                fi
-                ;;
-            *)
-                die "Usage: wallpaper.sh favmode [on|off]"
-                ;;
+            on)   favmode_on ;;
+            off)  favmode_off ;;
+            "")   [[ "$(get_mode)" == "favs" ]] && favmode_off || favmode_on ;;
+            *)    die "Usage: wallpaper.sh favmode [on|off]" ;;
         esac
         ;;
 
